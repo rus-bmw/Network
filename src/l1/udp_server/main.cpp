@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include <string>
+#include <string.h>
 
 #include <socket_wrapper/socket_headers.h>
 #include <socket_wrapper/socket_wrapper.h>
@@ -55,6 +55,7 @@ int main(int argc, char const *argv[])
     }
 
     char buffer[256];
+    char nameBuf[64];
 
     // socket address used to store client address
     struct sockaddr_in client_address = {0};
@@ -73,9 +74,14 @@ int main(int argc, char const *argv[])
 
         if (recv_len > 0)
         {
+            if (getnameinfo(reinterpret_cast<sockaddr *>(&client_address), client_address_len, nameBuf, sizeof(nameBuf) - 1, NULL, 0, 0))
+            {
+                strcpy(nameBuf, "unknown");
+            }
+
             buffer[recv_len] = '\0';
             std::cout
-                << "Client with address "
+                << "Client '" << nameBuf << "' with address "
                 << inet_ntop(AF_INET, &client_address.sin_addr, client_address_buf, sizeof(client_address_buf) / sizeof(client_address_buf[0]))
                 << ":" << ntohs(client_address.sin_port)
                 << " sent datagram "
@@ -85,6 +91,10 @@ int main(int argc, char const *argv[])
                 << buffer
                 << "\n'''"
                 << std::endl;
+
+
+            if (!memcmp(buffer,"exit",4)) break;
+
             //if ("exit" == command_string) run = false;
             //send(sock, &buf, readden, 0);
 
