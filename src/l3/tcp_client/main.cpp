@@ -3,7 +3,8 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
-#include <string>
+//#include <string>
+#include <cstring> //memcmp
 #include <thread>
 #include <vector>
 
@@ -129,7 +130,7 @@ int main(int argc, const char * const argv[])
             << "Sending request: \"" << request << "\"..."
             << std::endl;
 
-        request += "\r\n";
+        //request += "\r\n";
 
         if (!send_request(sock, request))
         {
@@ -147,17 +148,19 @@ int main(int argc, const char * const argv[])
         {
             auto recv_bytes = recv(sock, buffer.data(), buffer.size() - 1, 0);
 
-            std::cout
+            if (recv_bytes > 0)
+            {
+                std::cout
                 << recv_bytes
                 << " was received..."
                 << std::endl;
 
-            if (recv_bytes > 0)
-            {
                 buffer[recv_bytes] = '\0';
                 std::cout << "------------\n" << std::string(buffer.begin(), std::next(buffer.begin(), recv_bytes)) << std::endl;
+                if (!memcmp(buffer.data(),"exit",4)) return EXIT_SUCCESS;
                 continue;
             }
+            
             else if (-1 == recv_bytes)
             {
                 if (EINTR == errno) continue;
